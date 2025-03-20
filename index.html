@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIP Phone</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        input {
+            padding: 10px;
+            font-size: 1.2em;
+            width: 80%;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+        }
+
+        button#call-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        button#end-call-button {
+            background-color: #f44336;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>nacdOS - VoIP Phone</h1>
+        <input type="text" id="number" placeholder="Enter Number">
+        <div class="buttons">
+            <button id="call-button">Call</button>
+            <button id="end-call-button" disabled>End Call</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jssip@3.0.0/dist/jssip.min.js"></script>
+    <script>
+        // SIP Configuration
+        const SIP_USER = "17778691633102";  // Your SIP username
+        const SIP_PASS = "HorizonUser2";    // Your SIP password
+        const SIP_DOMAIN = "sip.callcentric.net";
+        const WS_SERVER = "wss://sip.callcentric.net:5061";  // WebSocket URL for Callcentric
+
+        let phoneCall = null;
+        let phone = null;
+
+        // SIP configuration
+        const sipConfig = {
+            uri: `sip:${SIP_USER}@${SIP_DOMAIN}`,
+            ws_servers: WS_SERVER,
+            trace_sip: true,
+            register: true,
+            password: SIP_PASS
+        };
+
+        // Button Event Listeners
+        document.getElementById('call-button').addEventListener('click', function() {
+            const number = document.getElementById('number').value;
+            if (number) {
+                makeCall(number);
+            }
+        });
+
+        document.getElementById('end-call-button').addEventListener('click', function() {
+            endCall();
+        });
+
+        // Function to make a call
+        function makeCall(number) {
+            if (phoneCall) {
+                console.log('Already on a call');
+                return;
+            }
+
+            phoneCall = phone.call(`sip:${number}@${SIP_DOMAIN}`, {
+                mediaConstraints: { audio: true, video: false },
+                pcConfig: { rtcpMuxPolicy: 'negotiate' }
+            });
+
+            document.getElementById('end-call-button').disabled = false;
+            console.log("Calling " + number);
+        }
+
+        // Function to end a call
+        function endCall() {
+            if (phoneCall) {
+                phoneCall.terminate();
+                phoneCall = null;
+                document.getElementById('end-call-button').disabled = true;
+                console.log("Call ended");
+            }
+        }
+
+        // Function to initialize the SIP phone
+        function startPhone() {
+            phone = new JsSIP.UA(sipConfig);
+            phone.start();
+
+            phone.on('newMessage', function(event) {
+                console.log('New message: ', event);
+            });
+        }
+
+        window.onload = startPhone;
+    </script>
+</body>
+</html>
